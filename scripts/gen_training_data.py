@@ -17,6 +17,7 @@ total_runs = 500
 
 policy_name = 'aggressive_blocking'
 policy_dir = os.path.join(train_dir, policy_name)
+track_types = ['curve', 'chicane']
 T = 20
 
 
@@ -25,7 +26,7 @@ def main(args=None):
     '''
     Collect the actual data
     '''
-    scen_params = ScenarioGenParams(types=['curve', 'chicane'], egoMin=egoMin, egoMax=egoMax, tarMin=tarMin,
+    scen_params = ScenarioGenParams(types=track_types, egoMin=egoMin, egoMax=egoMax, tarMin=tarMin,
                                     tarMax=tarMax,
                                     width=width)
     scen_gen = ScenarioGenerator(scen_params)

@@ -10,5 +10,6 @@ setup(
                       'scipy>=1.4.1',
                       'casadi>=3.5.1',
                       'torch>=1.10.0',
-                      'gpytorch>=1.5.1']
+                      'gpytorch>=1.5.1',
+                      'pyqtgraph>=0.12.2']
 )
