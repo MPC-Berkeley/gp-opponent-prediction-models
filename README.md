@@ -1,5 +1,5 @@
 # A Gaussian Process Model for Opponent Prediction in Autonomous Racing
-This reposity contains the code for the paper:
+This repository contains the code for the paper:
 
 **<a href="">A Gaussian Process Model for Opponent Prediction in Autonomous Racing</a>**
 <br>
