@@ -1,14 +1,15 @@
 # A Gaussian Process Model for Opponent Prediction in Autonomous Racing
 This repository contains the code for the paper:
 
-**<a href="">A Gaussian Process Model for Opponent Prediction in Autonomous Racing</a>**
+**<a href="http://arxiv.org/abs/2204.12533">A Gaussian Process Model for Opponent Prediction in Autonomous Racing</a>**
 <br>
-<a href="">Finn Lukas Busch</a>, 
-<a href="">Jake Johnson</a>,
-<a href="">Edward L. Zhu</a>, and
-<a href="">Francesco Borrelli</a>
+Finn Lukas Busch, 
+Jake Johnson,
+Edward L. Zhu, and
+Francesco Borrelli
 <br>
-Published in ...
+
+<!-- Published in ... -->
 
 
 ## Software Requirements
