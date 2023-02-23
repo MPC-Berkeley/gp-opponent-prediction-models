@@ -394,5 +394,53 @@ class MPCCApproxFullModelParams(ControllerConfig):
         self.input_rate_lb = np.array([self.u_a_rate_min, self.u_steer_rate_min, self.v_proj_rate_min])
         return
 
+@dataclass
+class CAMPCCParams(ControllerConfig):
+    N: int                              = field(default=10) # horizon length
+
+    qp_interface: str                   = field(default='casadi')
+    
+    # Code gen options
+    verbose: bool                       = field(default=False)
+    code_gen: bool                      = field(default=False)
+    jit: bool                           = field(default=False)
+    opt_flag: str                       = field(default='O0')
+    enable_jacobians: bool              = field(default=True)
+    solver_name: str                    = field(default='CA_MPCC')
+    solver_dir: str                     = field(default=None)
+    debug_plot: bool                    = field(default=False)
+
+    conv_approx: bool                   = field(default=False)
+    soft_track: bool                    = field(default=False)
+    track_tightening: float             = field(default=0)
+
+    soft_constraint_idxs: list          = field(default=None)
+    soft_constraint_quad: list          = field(default=None)
+    soft_constraint_lin: list           = field(default=None)
+
+    # pos_idx: list                       = field(default_factory=lambda : [3, 4])
+    state_scaling: list                 = field(default=None)
+    input_scaling: list                 = field(default=None)
+    damping: float                      = field(default=0.75)
+    qp_iters: int                       = field(default=2)
+
+    parametric_contouring_cost: bool    = field(default=False)
+    contouring_cost: float              = field(default=0.1)
+    contouring_cost_N: float            = field(default=1.0)
+    lag_cost: float                     = field(default=1000.0)
+    lag_cost_N: float                   = field(default=1000.0)
+    performance_cost: float             = field(default=0.02)
+    vs_cost: float                      = field(default=1e-4)
+    vs_rate_cost: float                 = field(default=1e-3)
+    track_slack_quad: float             = field(default=100.0)
+    track_slack_lin: float              = field(default=0.0)
+
+    vs_max: float                       = field(default=5.0)
+    vs_min: float                       = field(default=0.0)
+    vs_rate_max: float                  = field(default=5.0)
+    vs_rate_min: float                  = field(default=-5.0)
+
+    delay: list                         = field(default=None)
+
 if __name__ == "__main__":
     pass

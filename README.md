@@ -14,6 +14,7 @@ Francesco Borrelli
 
 ## Software Requirements
 `FORCES PRO` version 4.9+
+`CasADi` version 3.5+
 
 ## Installation instructions
 Run `install.sh` to install `barcgp` python package.

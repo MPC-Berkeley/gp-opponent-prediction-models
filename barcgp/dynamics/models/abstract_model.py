@@ -17,16 +17,70 @@ class AbstractModel(ABC):
     '''
     def __init__(self, model_config: ModelConfig):
         self.model_config = model_config
-        
+
+        self.code_gen = model_config.code_gen
+        self.jit = model_config.jit
+
         if not model_config.enable_jacobians:
             jac_opts = dict(enable_fd=False, enable_jacobian=False, enable_forward=False, enable_reverse=False)
         else:
             jac_opts = dict()
-        self.options = lambda fn_name: dict(jit=False, **jac_opts)
+
+        if self.code_gen and not self.jit:
+            self.c_file_name = self.model_config.model_name + '.c'
+            self.so_file_name = self.model_config.model_name + '.so'
+            self.generator = ca.CodeGenerator(self.c_file_name)
+            self.options = lambda fn_name: dict(jit=False, **jac_opts)
+        elif self.code_gen and self.jit:
+            self.generator = None
+            self.options = lambda fn_name: dict(jit=True,
+                                                    jit_name=fn_name,
+                                                    compiler='shell',
+                                                    jit_options=dict(compiler='gcc', flags=['-%s' % self.model_config.opt_flag], verbose=self.model_config.verbose),
+                                                    **jac_opts)
+        else:
+            self.generator = None
+            self.options = lambda fn_name: dict(jit=False, **jac_opts)
 
     @abstractmethod
     def step(self):
         pass
+
+    # Method for generating C code and building a shared object from it
+    def build_shared_object(self, fns) -> pathlib.Path:
+        for f in fns:
+            self.generator.add(f)
+
+        # Set up paths
+        cur_dir = pathlib.Path.cwd()
+        gen_path = cur_dir.joinpath(self.model_config.model_name)
+        c_path = gen_path.joinpath(self.c_file_name)
+        if gen_path.exists():
+            shutil.rmtree(gen_path)
+        gen_path.mkdir(parents=True)
+
+        # Switch directory to gen_path and generate C code
+        # (we do this because the CasADi CodeGenerator can't be initialized with a path)
+        os.chdir(gen_path)
+        if self.model_config.verbose:
+            print('- Generating C code for model %s at %s' % (self.model_config.model_name, str(gen_path)))
+        self.generator.generate()
+
+        # Compile into shared object
+        so_path = gen_path.joinpath(self.so_file_name)
+        if self.model_config.verbose:
+            print('- Compiling shared object %s from %s with optimization flag -%s' % (so_path, c_path, self.model_config.opt_flag))
+        os.system('gcc -fPIC -shared -%s %s -o %s' % (self.model_config.opt_flag, c_path, so_path))
+
+        # Swtich back to working directory
+        os.chdir(cur_dir)
+
+        # Install generated C code
+        if self.model_config.install:
+            install_path = self.install(verbose=self.model_config.verbose)
+            return install_path.joinpath(self.so_file_name)
+        else:
+            return so_path
 
     # Method for installing generated files
     def install(self, dest_dir: str=None, src_dir: str=None, verbose=False):
