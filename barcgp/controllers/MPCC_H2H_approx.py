@@ -694,7 +694,7 @@ class MPCC_H2H_approx(AbstractController):
         if self.slack:
             stage_E = np.hstack((stage_E, np.zeros((stage_E.shape[0], 1))))
             stage_E = np.hstack((stage_E, np.zeros((stage_E.shape[0], 1))))
-            stage_E = np.hstack((stage_E, np.zeros((stage_E.shape[0], 1))))  # TODO
+            # stage_E = np.hstack((stage_E, np.zeros((stage_E.shape[0], 1))))  # TODO
 
         self.model.E = stage_E
         self.model.eq = stage_equality_constraint
