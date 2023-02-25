@@ -57,8 +57,8 @@ def run_pid_warmstart(scenario : ScenarioDefinition, ego_dynamics_simulator : Dy
     while n_iter > 0:
         pid_controller_1.step(ego_sim_state)
         pid_controller_2.step(tar_sim_state)
-        ego_dynamics_simulator.step(ego_sim_state)
-        tar_dynamics_simulator.step(tar_sim_state)
+        ego_dynamics_simulator.step(ego_sim_state, T=dt)
+        tar_dynamics_simulator.step(tar_sim_state, T=dt)
         input_ego.t = t
         ego_sim_state.copy_control(input_ego)
         q, _ = ego_dynamics_simulator.model.state2qu(ego_sim_state)

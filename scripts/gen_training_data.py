@@ -30,14 +30,18 @@ def main(args=None):
                                     tarMax=tarMax,
                                     width=width)
     scen_gen = ScenarioGenerator(scen_params)
-    process_pool = mp.Pool(processes=8)
+        
     params = []
     for i in range(total_runs):
         params.append((dt, t, N, scen_gen.genScenario(), i))
 
-    process_pool.starmap(runSimulation, params)
-    process_pool.close()
-    process_pool.join()
+    # process_pool = mp.Pool(processes=8)
+    # process_pool.starmap(runSimulation, params)
+    # process_pool.close()
+    # process_pool.join()
+
+    for p in params:
+        runSimulation(*p)
 
 
 def runSimulation(dt, t, N, scenario, id):

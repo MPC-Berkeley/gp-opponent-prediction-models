@@ -268,12 +268,12 @@ class RadiusArclengthTrack():
                 y_bound_out.append(xy_coord[1])
         if close_loop:
             p.plot(x_track, y_track, pen=pg.mkPen('k', width=1, dash=[4, 2]))
-            p.plot(x_bound_in, y_bound_in, pen=pg.mkPen('k', width=2))
-            p.plot(x_bound_out, y_bound_out, pen=pg.mkPen('k', width=2))
+            p.plot(x_bound_in, y_bound_in, pen=pg.mkPen('k', width=1))
+            p.plot(x_bound_out, y_bound_out, pen=pg.mkPen('k', width=1))
         else:
             p.plot(x_track[:-1], y_track[:-1], pen=pg.mkPen('k', width=1, dash=[4, 2]))
-            p.plot(x_bound_in[:-1], y_bound_in[:-1], pen=pg.mkPen('k', width=2))
-            p.plot(x_bound_out[:-1], y_bound_out[:-1], pen=pg.mkPen('k', width=2))
+            p.plot(x_bound_in[:-1], y_bound_in[:-1], pen=pg.mkPen('k', width=1))
+            p.plot(x_bound_out[:-1], y_bound_out[:-1], pen=pg.mkPen('k', width=1))
 
         track_bbox = (np.amin(x_bound_out),
                       np.amin(y_bound_out),

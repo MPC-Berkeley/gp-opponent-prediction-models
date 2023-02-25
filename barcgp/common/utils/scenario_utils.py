@@ -546,10 +546,10 @@ def smoothPlotResults(sim_data: SimData, speedup=1, fps=60, start_t=0, close_loo
     print('Plotting simulation of length t=', sim_data.ego_states[-1].t, " with ", speedup, "x speed")
     plot_conf = GlobalPlotConfigs(buffer_length=50, draw_period=1 / (2 * fps), update_period=1 / (2 * fps),
                                   close_loop=close_loop)
-    ego_v_plot_conf = VehiclePlotConfigs('ego', vehicle_draw_L=0.26, vehicle_draw_W=.173, show_sim=True, simulated=True,
+    ego_v_plot_conf = VehiclePlotConfigs('ego', vehicle_draw_L=0.37, vehicle_draw_W=.195, show_sim=True, simulated=True,
                                          show_est=False, show_ecu=True, show_pred=True, show_traces=True, show_full_traj=True,
                                          state_list = sim_data.ego_states, color='g')
-    tar_v_plot_conf = VehiclePlotConfigs('tar', vehicle_draw_L=0.26, vehicle_draw_W=.173, show_sim=True, simulated=True,
+    tar_v_plot_conf = VehiclePlotConfigs('tar', vehicle_draw_L=0.37, vehicle_draw_W=.195, show_sim=True, simulated=True,
                                          show_est=False, show_ecu=True, show_pred=True,
                                          show_traces=False, show_full_traj=True, state_list=sim_data.tar_states)
     fig = BarcFigure(0, plot_conf)

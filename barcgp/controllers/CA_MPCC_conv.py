@@ -832,7 +832,7 @@ class CA_MPCC_conv(AbstractController):
             mode = 'speed'
             arg = hp.hpipm_ocp_qp_solver_arg(dims, mode)
             arg.set('mu0', 1e0)
-            arg.set('iter_max', 200)
+            arg.set('iter_max', 500)
             arg.set('tol_stat', 1e-6)
             arg.set('tol_eq', 1e-6)
             arg.set('tol_ineq', 1e-6)
@@ -1179,7 +1179,8 @@ class CA_MPCC_conv(AbstractController):
 
         t = time.time()
         status = self.solver.get('status')
-        if status == 0:
+        # if status == 0:
+        if status == 0 or status == 1:
             success = True
             xw, dw = [], []
             for k in range(self.N+1):
