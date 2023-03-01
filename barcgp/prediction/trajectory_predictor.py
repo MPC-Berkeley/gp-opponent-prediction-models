@@ -9,18 +9,23 @@ from typing import List
 # GP imports
 import gc
 import torch, gpytorch
+
 from barcgp.visualization.barc_plotter_qt import BarcFigure
+
 from barcgp.prediction.gpytorch_models import MultitaskGPModelApproximate, MultitaskGPModel, \
     IndependentMultitaskGPModelApproximate, ExactGPModel
 from barcgp.prediction.gp_controllers import GPControllerTrained
+
 from barcgp.common.tracks.radius_arclength_track import RadiusArclengthTrack
 
-from barcgp.h2h_configs import nl_mpc_params, N
 from barcgp.dynamics.models.model_types import DynamicBicycleConfig
 from barcgp.simulation.dynamics_simulator import DynamicsSimulator
-from barcgp.controllers.NL_MPC import NL_MPC
-from barcgp.controllers.utils.controllerTypes import *
 
+from barcgp.controllers.NL_MPC import NL_MPC
+
+# from barcgp.controllers.utils.controllerTypes import *
+
+from barcgp.h2h_configs import nl_mpc_params, N
 
 class BasePredictor():
     '''
@@ -104,7 +109,7 @@ class BasePredictor():
         missing_names = set(self.predictions).difference(set(env_state))
         for mn in missing_names:
             if t - self.last_update[mn] > self.destroy_timeout:
-                self._destroy_predictor(vehicle_name)
+                self._destroy_predictor(mn)
 
     def _add_predictor(self, vehicle_name, vehicle_state, t):
         self.predictions[vehicle_name] = None
@@ -184,13 +189,13 @@ class ConstantAngularVelocityPredictor(BasePredictor):
         psidot = target_state.w.w_psi
         psi = target_state.e.psi
 
-        t_list = np.zeros((self.N))
-        x_list = np.zeros((self.N))
-        y_list = np.zeros((self.N))
-        psi_list = np.zeros((self.N))
+        t_list = np.zeros((self.N+1))
+        x_list = np.zeros((self.N+1))
+        y_list = np.zeros((self.N+1))
+        psi_list = np.zeros((self.N+1))
 
         delta_psi = 0
-        for i in range(self.N):
+        for i in range(self.N+1):
             x_list[i] = x
             y_list[i] = y
             t_list[i] = t
@@ -199,12 +204,11 @@ class ConstantAngularVelocityPredictor(BasePredictor):
             x += self.dt * (v_x * np.cos(delta_psi) - v_y * np.sin(delta_psi))
             y += self.dt * (v_y * np.cos(delta_psi) + v_x * np.sin(delta_psi))
 
-
             delta_psi += self.dt * psidot
             psi += self.dt * psidot
 
         pred = VehiclePrediction(t=target_state.t, x=x_list, y=y_list, psi=psi_list)
-        pred.xy_cov = np.repeat(np.diag([self.cov, self.cov])[np.newaxis, :, :], self.N, axis=0)
+        pred.xy_cov = np.repeat(np.diag([self.cov, self.cov])[np.newaxis, :, :], self.N+1, axis=0)
         return pred
 
 class NoPredictor(BasePredictor):
@@ -229,7 +233,77 @@ class MPCPredictor(BasePredictor):
                        ego_prediction: VehiclePrediction, tar_prediction=None):
         return tar_prediction
 
+class CAMPCCPredictor(BasePredictor):
+    def __init__(self, N, track, cov, dynamics_model, mpc_params, bounds):
+        super(CAMPCCPredictor, self).__init__(N, track)
+        self.N = N
+        self.track = track
+        self.cov = cov
+        self.dynamics_model = dynamics_model
 
+        from barcgp.controllers.CA_MPCC_conv import CA_MPCC_conv
+        import casadi as ca
+
+        sym_q = ca.MX.sym('q', dynamics_model.n_q)
+        sym_u = ca.MX.sym('u', dynamics_model.n_u)
+        sym_du = ca.MX.sym('du', dynamics_model.n_u)
+
+        vy_idx = 1
+        wz_idx = 2
+        x_idx = 3
+        y_idx = 4
+        psi_idx = 5
+
+        ua_idx = 0
+        us_idx = 1
+
+        sym_state_stage = sym_state_term = 0
+        sym_input_stage = 0.5*(1e-4*(sym_u[ua_idx])**2 + 1e-4*(sym_u[us_idx])**2)
+        sym_input_term = 0.5*(1e-4*(sym_u[ua_idx])**2 + 1e-4*(sym_u[us_idx])**2)
+        sym_rate_stage = 0.5*(0.01*(sym_du[ua_idx])**2 + 0.01*(sym_du[us_idx])**2)
+
+        sym_costs = {'state': [None for _ in range(N+1)], 'input': [None for _ in range(N+1)], 'rate': [None for _ in range(N)]}
+        for k in range(N):
+            sym_costs['state'][k] = ca.Function(f'state_stage_{k}', [sym_q], [sym_state_stage])
+            sym_costs['input'][k] = ca.Function(f'input_stage_{k}', [sym_u], [sym_input_stage])
+            sym_costs['rate'][k] = ca.Function(f'rate_stage_{k}', [sym_du], [sym_rate_stage])
+            sym_costs['state'][N] = ca.Function('state_term', [sym_q], [sym_state_term])
+        sym_costs['input'][N] = ca.Function('input_term', [sym_u], [sym_input_term])
+
+        sym_constrs = {'state_input': [None for _ in range(N+1)], 
+                            'rate': [None for _ in range(N)]}
+
+        self.mpcc_controller = CA_MPCC_conv(dynamics_model, 
+                                    sym_costs, 
+                                    sym_constrs, 
+                                    bounds,
+                                    mpc_params)
+    
+    def set_warm_start(self, state):
+        u_ws = 0.01*np.ones((N+1, self.dynamics_model.n_u))
+        vs_ws = state.v.v_long*np.ones(N+1)
+        du_ws = np.zeros((N, self.dynamics_model.n_u))
+        dvs_ws = np.zeros(N)
+        P = np.array([])
+        R = np.array([])
+        self.mpcc_controller.set_warm_start(u_ws, vs_ws, du_ws, dvs_ws, 
+                                        state=state,
+                                        reference=R,
+                                        parameters=P)
+
+    def get_prediction(self, ego_state: VehicleState, target_state: VehicleState,
+                       ego_prediction: VehiclePrediction, tar_prediction=None):
+        P = np.array([])
+        R = np.array([])
+        self.mpcc_controller.step(target_state,
+                                    reference=R,
+                                    parameters=P)
+        pred = self.mpcc_controller.get_prediction().copy()
+        if pred is not None:
+            # pred.s = pred.s[:self.N]
+            pred.xy_cov = np.repeat(np.diag([self.cov, self.cov])[np.newaxis, :, :], self.N+1, axis=0)
+        return pred
+    
 class NLMPCPredictor(BasePredictor):
     def __init__(self, N:int, track : RadiusArclengthTrack, cov: float = 0, v_ref : int = 1.9):
         super(NLMPCPredictor, self).__init__(N, track)

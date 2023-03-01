@@ -345,10 +345,12 @@ class VehiclePrediction(PythonMsg):
         """
         Converts s, x_tran uncertainty to uncertainty in car heading direction, NOT global frame!
         """
+        N = len(self.s)
         self.xy_cov = np.zeros((N, 2, 2))
         if self.sey_cov is not None:
             sey_unflat = np.array(self.sey_cov).reshape(N, 4)
-            for i in range(1, N):
+            # for i in range(1, N):
+            for i in range(N):
                 sey_cov = sey_unflat[i].reshape(2, 2)
                 c = track.get_curvature(self.s[i])
                 if not c == 0:

@@ -7,7 +7,7 @@ from barcgp.prediction.gpytorch_models import ExactGPModel, MultitaskGPModel, Mu
     IndependentMultitaskGPModelApproximate
 from barcgp.prediction.gp_controllers import GPControllerApproximate
 
-policy_name = 'aggressive_blocking'
+policy_name = 'aggressive_blocking_ca'
 policy_dir = os.path.join(train_dir, policy_name)
 scencurve_dir = os.path.join(policy_dir, 'curve')
 scenstraight_dir = os.path.join(policy_dir, 'straight')
@@ -18,7 +18,7 @@ def main():
     dirs = [scencurve_dir, scenchicane_dir]
     # change curve type in file_utils
     sampGen = SampleGenerator(dirs, randomize=True)
-    sampGen.plotStatistics('c')
+    # sampGen.plotStatistics('c')
     # sampGen.even_augment('s', 0.3)
     if not dir_exists(scencurve_dir):
         raise RuntimeError(

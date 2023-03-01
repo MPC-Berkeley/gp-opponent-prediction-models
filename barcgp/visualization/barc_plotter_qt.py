@@ -64,7 +64,7 @@ class BarcFigure():
         self.n_cov_pts = 20
         theta = np.linspace(0, 2*np.pi, self.n_cov_pts)
         self.unit_circle_pts = np.vstack((np.cos(theta), np.sin(theta)))
-        self.n_std = 2
+        self.n_std = 1
 
         # Mapping from number of upper triangular elements to length of diagonal
         # Used to determin the state dimension given the upper triangular of covariance matrix

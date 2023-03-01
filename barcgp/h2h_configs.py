@@ -12,7 +12,6 @@ N = 14
 # Number of iterations to run PID (need N+1 because of NLMPC predictor warmstart)
 n_iter = N+1 
 # Track width (should be pre-determined from track generation '.npz')
-# width = 0.75
 width = 1.1
 
 # Force rebuild all FORCES code-gen controllers
@@ -32,19 +31,13 @@ factor = 3.0
 # Cost weights
 tar_blocking_weight = 20
 tar_contouring_nominal = 0.1
-ego_inner_collision_quad = 200
-ego_outer_collision_quad = 40
+ego_inner_collision_quad = 50
+ego_outer_collision_quad = 5
 
 # Cost parameters
-ego_inner_radius = 0.23
+ego_inner_radius = 0.2
 ego_outer_radius = 0.3
-tar_radius = 0.21
-
-
-# tar_dynamics_config = DynamicBicycleConfig(dt=dt, model_name='dynamic_bicycle',
-#                                            wheel_dist_front=0.13, wheel_dist_rear=0.13)
-# ego_dynamics_config = DynamicBicycleConfig(dt=dt, model_name='dynamic_bicycle',
-#                                            wheel_dist_front=0.13, wheel_dist_rear=0.13)
+tar_radius = 0.22
 
 # Dynamics configs
 discretization_method = 'rk4'
@@ -105,21 +98,8 @@ tar_sim_dynamics_config = DynamicBicycleConfig(dt=0.01,
                                             pacejka_c_front=2.28,
                                             pacejka_c_rear=2.28)
 
-# tarMin = VehicleState(t=0.0,
-#                       p=ParametricPose(s=offset + 0.9, x_tran=-.3 * width, e_psi=-0.02),
-#                       v=BodyLinearVelocity(v_long=0.5*factor))
-# tarMax = VehicleState(t=0.0,
-#                       p=ParametricPose(s=offset + 1.2, x_tran=.3* width, e_psi=0.02),
-#                       v=BodyLinearVelocity(v_long=1.0*factor))
-# egoMin = VehicleState(t=0.0,
-#                       p=ParametricPose(s=offset + 0.2, x_tran=-.3 * width, e_psi=-0.02),
-#                       v=BodyLinearVelocity(v_long=0.5*factor))
-# egoMax = VehicleState(t=0.0,
-#                       p=ParametricPose(s=offset + 0.4, x_tran=.3 * width, e_psi=0.02),
-#                       v=BodyLinearVelocity(v_long=1.0*factor))
-
 # Initial condition sampling bounds
-ep = 10*np.pi/180
+ep = 5*np.pi/180
 tarMin = VehicleState(t=0.0,
                     p=ParametricPose(s=offset + 0.9, x_tran=-.9 * width/2, e_psi=-ep),
                     v=BodyLinearVelocity(v_long=0.5*tar_v_max))
@@ -191,70 +171,6 @@ gp_mpcc_ego_params = CAMPCCParams(
     
     verbose=False
 )
-
-# mpcc_ego_params = CAMPCCParams(
-#     N=14,
-    
-#     qp_interface='hpipm',
-
-#     # delay=[1, 1],
-#     # pos_idx=[3, 4],
-#     state_scaling=[4.0, 2.0, 7.0, 6.0, 6.0, 6.283185307179586],
-#     input_scaling=[2.0, 0.436],
-#     contouring_cost=0.01,
-#     contouring_cost_N=0.01,
-#     lag_cost=1000.0,
-#     lag_cost_N=1000.0,
-#     performance_cost=0.05,
-#     vs_cost=0.0001,
-#     vs_rate_cost=0.001,
-#     vs_max=5.0,
-#     vs_min=0.0,
-#     vs_rate_max=5.0,
-#     vs_rate_min=-5.0,
-
-#     soft_track=True,
-#     track_slack_quad=30,
-#     track_slack_lin=250,
-#     track_tightening=0.1,
-
-#     damping=0.25,
-#     qp_iters=2,
-    
-#     verbose=False
-# )
-
-# mpcc_tv_params = CAMPCCParams(
-#     N=14,
-    
-#     qp_interface='hpipm',
-
-#     # delay=[1, 1],
-#     # pos_idx=[3, 4],
-#     state_scaling=[4.0, 2.0, 7.0, 6.0, 6.0, 6.283185307179586],
-#     input_scaling=[2.0, 0.436],
-#     contouring_cost=0.01,
-#     contouring_cost_N=0.01,
-#     lag_cost=1000.0,
-#     lag_cost_N=1000.0,
-#     performance_cost=0.05,
-#     vs_cost=0.0001,
-#     vs_rate_cost=0.001,
-#     vs_max=5.0,
-#     vs_min=0.0,
-#     vs_rate_max=5.0,
-#     vs_rate_min=-5.0,
-
-#     soft_track=True,
-#     track_slack_quad=30,
-#     track_slack_lin=250,
-#     track_tightening=0.1,
-
-#     damping=0.25,
-#     qp_iters=2,
-    
-#     verbose=False
-# )
 
 ego_mpc_params = CAMPCCParams(dt=dt, N=N,
                             verbose=False,
@@ -340,3 +256,32 @@ nl_mpc_params = NLMPCParams(
         u_a_rate_max=1.0,
         u_a_rate_min=-1.0
     )
+
+pred_mpc_params = CAMPCCParams(dt=dt, N=N,
+                            verbose=False,
+                            debug_plot=False,
+                            damping=0.25,
+                            qp_iters=2,
+                            state_scaling=[4, 2, 7, 6, 6, 2*np.pi],
+                            input_scaling=[2, 0.436],
+                            delay=None,
+                            parametric_contouring_cost=False,
+                            contouring_cost=tar_contouring_nominal,
+                            contouring_cost_N=tar_contouring_nominal,
+                            lag_cost=1000.0,
+                            lag_cost_N=1000.0,
+                            performance_cost=0.02,
+                            vs_cost=1e-4,
+                            vs_rate_cost=1e-3,
+                            vs_max=5.0,
+                            vs_min=0.0,
+                            vs_rate_max=5.0,
+                            vs_rate_min=-5.0,
+                            soft_track=True,
+                            track_slack_quad=50.0,
+                            track_slack_lin=250.0,
+                            track_tightening=0.1,
+                            code_gen=False,
+                            opt_flag='O3',
+                            solver_name='pred_MPCC_conv',
+                            qp_interface='hpipm')
