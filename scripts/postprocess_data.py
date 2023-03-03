@@ -6,10 +6,11 @@ from typing import List
 import cProfile, pstats, io
 from pstats import SortKey
 import tikzplotlib
+import matplotlib.pyplot as plt
+
 from barcgp.common.utils.file_utils import *
-
-
 from barcgp.common.utils.scenario_utils import EvalData, PostprocessData
+
 from barcgp.h2h_configs import *
 
 total_runs = 100
@@ -115,8 +116,8 @@ class CollisionChecker():
             self.ego_leading_steps+=1
             if self.ego_leading_steps > 1:
                 self.tar_leading=False
-        e1 = Vehicle(l=L, w=W, x=e.x.x, y=e.x.y, phi=e.e.psi)
-        e2 = Vehicle(l=L, w=W, x=t.x.x, y=t.x.y, phi=t.e.psi)
+        e1 = Vehicle(l=ego_L, w=ego_W, x=e.x.x, y=e.x.y, phi=e.e.psi)
+        e2 = Vehicle(l=tar_L, w=tar_W, x=t.x.x, y=t.x.y, phi=t.e.psi)
         res, d = collision_check(e1, e2)
         self.col_d.append(d)
         if self.ego_win:
@@ -193,10 +194,10 @@ class LeftTrack():
 
     def next(self, e: VehicleState, t, e_p, t_p):
         if not self.left:
-            if abs(e.p.x_tran) > self.track_wdth / 2 + W:
+            if abs(e.p.x_tran) > self.track_wdth / 2 + ego_W:
                 self.left = True
         if not self.left_tv:
-            if abs(t.p.x_tran) > self.track_wdth / 2 + W:
+            if abs(t.p.x_tran) > self.track_wdth / 2 + tar_W:
                 self.left_tv = True
 
     def get_results(self):
@@ -334,11 +335,6 @@ def get_metrics(scen_data: EvalData):
     metrics.u_s = u[1]
     metrics.u_a_min = u[2]
     return metrics
-
-
-L = 0.26
-W = L / 1.5
-
 
 def parse_metrics(metrics: Metrics, data: PostprocessData, i):
     # Counts

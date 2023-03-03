@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-from barcgp.common.utils.file_utils import *
+
 import numpy as np
 import gpytorch
+
+from barcgp.common.utils.file_utils import *
 from barcgp.common.utils.scenario_utils import SampleGenerator, Sample
+
 from barcgp.prediction.gpytorch_models import ExactGPModel, MultitaskGPModel, MultitaskGPModelApproximate, \
     IndependentMultitaskGPModelApproximate
 from barcgp.prediction.gp_controllers import GPControllerApproximate
@@ -13,7 +16,7 @@ scencurve_dir = os.path.join(policy_dir, 'curve')
 scenstraight_dir = os.path.join(policy_dir, 'straight')
 scenchicane_dir = os.path.join(policy_dir, 'chicane')
 
-# Training
+# GP Ttaining
 def main():
     dirs = [scencurve_dir, scenchicane_dir]
     # change curve type in file_utils
@@ -38,7 +41,6 @@ def main():
     create_dir(path=model_dir)
     gp_controller.save_model(policy_name)
     gp_controller.evaluate()
-
 
 if __name__ == "__main__":
     main()

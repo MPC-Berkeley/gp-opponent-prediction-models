@@ -7,7 +7,7 @@ import numpy as np
 import casadi as ca
 
 from barcgp.common.utils.file_utils import *
-from barcgp.common.utils.scenario_utils import SimData, smoothPlotResults, ScenarioGenParams, ScenarioGenerator, EvalData, post_gp
+from barcgp.common.utils.scenario_utils import SimData, smoothPlotResults, ScenarioGenParams, ScenarioGenerator
 from barcgp.common.pytypes import *
 
 from barcgp.h2h_configs import dt, N, width
@@ -29,7 +29,7 @@ total_runs = 500
 policy_name = 'aggressive_blocking_ca'
 policy_dir = os.path.join(train_dir, policy_name)
 track_types = ['curve', 'chicane']
-T = 20
+T = 20 # Max simulation time
 
 def main(args=None):
     t = 0  # Initial time increment
@@ -160,7 +160,6 @@ def runSimulation(dt, t, N, scenario, id):
                                        reference=ego_R,
                                        parameters=ego_P)
 
-    # tar_u_ws = np.tile(tar_dynamics_model.input2u(tar_history_actuation), (N+1, 1))
     tar_u_ws = 0.01*np.ones((N+1, tar_dynamics_model.n_u))
     tar_vs_ws = tar_sim_state.v.v_long*np.ones(N+1)
     tar_du_ws = np.zeros((N, tar_dynamics_model.n_u))
@@ -188,8 +187,6 @@ def runSimulation(dt, t, N, scenario, id):
             print(f'Sim {id}: Target outside of track, stopping...')
             break
 
-        # if tar_sim_state.p.s >= 1.9 * scenario.length or ego_sim_state.p.s >= 1.9 * scenario.length:
-        #     break
         if tar_sim_state.p.s >= 1.0 * scenario.length or ego_sim_state.p.s >= 1.0 * scenario.length:
             print(f'Sim {id}: Reached end of track, stopping')
             break

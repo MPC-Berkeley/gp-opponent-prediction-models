@@ -39,6 +39,12 @@ ego_inner_radius = 0.2
 ego_outer_radius = 0.3
 tar_radius = 0.22
 
+ego_L = 0.37
+ego_W = 0.195
+
+tar_L = 0.37
+tar_W = 0.195
+
 # Dynamics configs
 discretization_method = 'rk4'
 

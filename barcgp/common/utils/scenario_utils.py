@@ -9,16 +9,18 @@ from dataclasses import dataclass, field
 import random
 
 import pynput
-from typing import List
+from typing import List, Tuple
 import numpy as np
 import scipy.interpolate
 
 import matplotlib.pyplot as plt
 
+from barcgp.h2h_configs import ego_L, ego_W, tar_L, tar_W
 from barcgp.common.pytypes import VehicleState, VehiclePrediction, ParametricPose, BodyLinearVelocity, VehicleActuation
 from barcgp.common.tracks.radius_arclength_track import RadiusArclengthTrack
 from barcgp.common.tracks.track_lib import CurveTrack, StraightTrack, ChicaneTrack
 from barcgp.common.tracks.track import get_track
+
 from barcgp.visualization.barc_plotter_qt import BarcFigure, GlobalPlotConfigs, VehiclePlotConfigs
 
 @dataclass
@@ -247,7 +249,7 @@ class ScenarioGenerator:
 
 @dataclass
 class Sample():
-    input: (VehicleState, VehicleState)
+    input: Tuple[VehicleState, VehicleState]
     output: VehicleState
     s: float
 
@@ -546,10 +548,10 @@ def smoothPlotResults(sim_data: SimData, speedup=1, fps=60, start_t=0, close_loo
     print('Plotting simulation of length t=', sim_data.ego_states[-1].t, " with ", speedup, "x speed")
     plot_conf = GlobalPlotConfigs(buffer_length=50, draw_period=1 / (2 * fps), update_period=1 / (2 * fps),
                                   close_loop=close_loop)
-    ego_v_plot_conf = VehiclePlotConfigs('ego', vehicle_draw_L=0.37, vehicle_draw_W=.195, show_sim=True, simulated=True,
+    ego_v_plot_conf = VehiclePlotConfigs('ego', vehicle_draw_L=ego_L, vehicle_draw_W=ego_W, show_sim=True, simulated=True,
                                          show_est=False, show_ecu=True, show_pred=True, show_traces=True, show_full_traj=True,
                                          state_list = sim_data.ego_states, color='g')
-    tar_v_plot_conf = VehiclePlotConfigs('tar', vehicle_draw_L=0.37, vehicle_draw_W=.195, show_sim=True, simulated=True,
+    tar_v_plot_conf = VehiclePlotConfigs('tar', vehicle_draw_L=tar_L, vehicle_draw_W=tar_W, show_sim=True, simulated=True,
                                          show_est=False, show_ecu=True, show_pred=True,
                                          show_traces=False, show_full_traj=True, state_list=sim_data.tar_states)
     fig = BarcFigure(0, plot_conf)
@@ -557,7 +559,7 @@ def smoothPlotResults(sim_data: SimData, speedup=1, fps=60, start_t=0, close_loo
     fig.add_vehicle(ego_v_plot_conf)
     fig.add_vehicle(tar_v_plot_conf)
     if hasattr(sim_data, "tar_gp_pred") and sim_data.tar_gp_pred is not None:
-        gp_tar_v_plot_conf = VehiclePlotConfigs('gp_tar', vehicle_draw_L=0.26, vehicle_draw_W=.173, show_sim=True,
+        gp_tar_v_plot_conf = VehiclePlotConfigs('gp_tar', vehicle_draw_L=tar_L, vehicle_draw_W=tar_W, show_sim=True,
                                              simulated=True,
                                              show_est=False, show_ecu=True, show_pred=True,
                                              show_cov=True, # Enable covariance plotting
