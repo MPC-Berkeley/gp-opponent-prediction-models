@@ -66,18 +66,21 @@ def main(args=None):
                 params.append((dt, t, N, names[k], predictors[k], scen, i+d, offset))
 
     print("Starting non-GP Evaluation!")
-    print(len(params[0]))
-    process_pool = mp.Pool(processes=10)
-    process_pool.starmap(runSimulation, params)
-    print("Closing!")
-    process_pool.close()
-    process_pool.join()
+    # print(len(params[0]))
+    # process_pool = mp.Pool(processes=10)
+    # process_pool.starmap(runSimulation, params)
+    # print("Closing!")
+    # process_pool.close()
+    # process_pool.join()
+    for p in params:
+        runSimulation(*p)
+        
     print("Starting GP Evaluation!")
     for p in gp_params:
         runSimulation(*p)
 
 def runSimulation(dt, t, N, name, predictor, scenario, id, offset=0):
-    print('Sim', id)
+    print(f'{name} sim {id}')
     tv_inf, ego_inf = False, False
     track_obj = scenario.track
 
@@ -98,7 +101,8 @@ def runSimulation(dt, t, N, name, predictor, scenario, id, offset=0):
     mpcc_tv_controller.set_warm_start(*tv_history)
 
     if isinstance(predictor, NLMPCPredictor):
-        predictor.set_warm_start(*vehiclestate_history)
+        # predictor.set_warm_start(*vehiclestate_history)
+        predictor.set_warm_start()
 
     gp_tarpred_list = [None] * n_iter
     egopred_list = [None] * n_iter

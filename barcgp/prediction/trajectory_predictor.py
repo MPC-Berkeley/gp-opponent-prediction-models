@@ -97,14 +97,14 @@ class BasePredictor():
                 self._update_predictor(vehicle_name, vehicle_state, t)
         return
 
-    def _check_stale_vehicles(self, env_state, t):
-        '''
-        Remove predictors that haven't shown up in a long time
-        '''
-        missing_names = set(self.predictions).difference(set(env_state))
-        for mn in missing_names:
-            if t - self.last_update[mn] > self.destroy_timeout:
-                self._destroy_predictor(vehicle_name)
+    # def _check_stale_vehicles(self, env_state, t):
+    #     '''
+    #     Remove predictors that haven't shown up in a long time
+    #     '''
+    #     missing_names = set(self.predictions).difference(set(env_state))
+    #     for mn in missing_names:
+    #         if t - self.last_update[mn] > self.destroy_timeout:
+    #             self._destroy_predictor(vehicle_name)
 
     def _add_predictor(self, vehicle_name, vehicle_state, t):
         self.predictions[vehicle_name] = None

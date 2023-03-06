@@ -15,7 +15,9 @@ import forcespro
 import forcespro.nlp
 
 from barcgp.dynamics.models.dynamics_models import CasadiDynamicsModel
+
 from barcgp.common.pytypes import VehicleState, VehicleActuation, VehiclePrediction
+from barcgp.common.utils.file_utils import *
 
 from barcgp.controllers.abstract_controller import AbstractController
 from barcgp.controllers.utils.controllerTypes import NLMPCParams
@@ -202,6 +204,17 @@ class NL_MPC(AbstractController):
         return info
 
     def _load_solver(self, solver_dir):
+        if not dir_exists(solver_dir):
+            print("====================")
+            print("Solver files do not exist, rebuilding and saving config file to", solver_dir, "...")
+            print("====================")
+            solver_found = False
+        else:
+            solver_found = True
+        if solver_found:
+            print('Found solver files for solver', self.solver_name)
+        else:
+            self._build_solver()
         self.solver = forcespro.nlp.Solver.from_directory(solver_dir)
 
     def _build_solver(self):

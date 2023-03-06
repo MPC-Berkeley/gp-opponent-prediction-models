@@ -281,7 +281,83 @@ class RadiusArclengthTrack():
                       np.amax(y_bound_out) - np.amin(y_bound_out))
 
         return track_bbox
+    
+    def plot_map(self, ax, pts_per_dist=None, close_loop=True, show_meter_markers=False):
+        if self.key_pts is None:
+            raise ValueError('Track key points have not been defined')
 
+        if pts_per_dist is None:
+            pts_per_dist = 2000 / self.track_length
+
+        # Plot the starting line
+        init_x = self.key_pts[0, 0]
+        init_y = self.key_pts[0, 1]
+        init_psi = self.key_pts[0, 2]
+        start_line_x = [init_x + np.cos(init_psi + np.pi / 2) * self.track_width / 2,
+                        init_x - np.cos(init_psi + np.pi / 2) * self.track_width / 2]
+        start_line_y = [init_y + np.sin(init_psi + np.pi / 2) * self.track_width / 2,
+                        init_y - np.sin(init_psi + np.pi / 2) * self.track_width / 2]
+        ax.plot(start_line_x, start_line_y, 'r', linewidth=1)
+
+        # Plot the track and boundaries
+        x_track = []
+        x_bound_in = []
+        x_bound_out = []
+        y_track = []
+        y_bound_in = []
+        y_bound_out = []
+        for i in range(1, self.key_pts.shape[0]):
+            l = self.key_pts[i, 4]
+            cum_s = self.key_pts[i - 1, 3]
+            n_pts = np.around(l * pts_per_dist)
+            d = np.linspace(0, l,
+                            int(n_pts))  # FIXED - numpy no longer allows interpolation using a double number of points
+            for j in d:
+                cl_coord = (j + cum_s, 0, 0)
+                xy_coord = self.local_to_global(cl_coord)
+                x_track.append(xy_coord[0])
+                y_track.append(xy_coord[1])
+                cl_coord = (j + cum_s, self.track_width / 2, 0)
+                xy_coord = self.local_to_global(cl_coord)
+                x_bound_in.append(xy_coord[0])
+                y_bound_in.append(xy_coord[1])
+                cl_coord = (j + cum_s, -self.track_width / 2, 0)
+                xy_coord = self.local_to_global(cl_coord)
+                x_bound_out.append(xy_coord[0])
+                y_bound_out.append(xy_coord[1])
+        if close_loop:
+            ax.plot(x_track, y_track, 'k--', linewidth=1)
+            ax.plot(x_bound_in, y_bound_in, 'k')
+            ax.plot(x_bound_out, y_bound_out, 'k')
+        else:
+            ax.plot(x_track[:-1], y_track[:-1], 'k--', linewidth=1)
+            ax.plot(x_bound_in[:-1], y_bound_in[:-1], 'k')
+            ax.plot(x_bound_out[:-1], y_bound_out[:-1], 'k')
+
+        if show_meter_markers:
+            if self.track_length >= 1:
+                for s in range(1, int(np.floor(self.track_length))+1):
+                    p_i = self.local_to_global((s, self.track_width/2, 0))
+                    p_o = self.local_to_global((s, -self.track_width/2, 0))
+                    ax.plot([p_i[0], p_o[0]], [p_i[1], p_o[1]], 'b', linewidth=1)
+                    t = np.arctan2(p_i[1]-p_o[1], p_i[0]-p_o[0])
+                    if t >= 0 and t <= np.pi/2:
+                        anchor = ('right','top')
+                    elif t > np.pi/2 and t <= np.pi:
+                        anchor = ('left','top')
+                    elif t >= -np.pi/2 and t <= 0:
+                        anchor = ('right','bottom')
+                    elif t > -np.pi and t <= -np.pi/2:
+                        anchor = ('left','bottom')
+                    ax.text(p_o[0], p_o[1], str(s), ha=anchor[0], va=anchor[1])
+
+        track_bbox = (np.amin(x_bound_out),
+                      np.amin(y_bound_out),
+                      np.amax(x_bound_out) - np.amin(x_bound_out),
+                      np.amax(y_bound_out) - np.amin(y_bound_out))
+
+        return track_bbox
+    
     def remove_phase_out(self):
         if self.phase_out:
             self.track_length = self.key_pts[-2][3]

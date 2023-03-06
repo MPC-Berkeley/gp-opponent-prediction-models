@@ -206,8 +206,10 @@ class MPCC_H2H_approx(AbstractController):
         # crashing
         # if not blocking and tv_pred is not None and tv_pred.t and tv_state.p.s - ego_state.p.s < 4 *self.lencar:
         if tv_pred is not None and tv_pred.t and tv_state is not None and tv_state.t:
-            contains_parametric = tv_pred.s and np.any(tv_pred.s)
-            contains_global = tv_pred.x and np.any(tv_pred.x)
+            # contains_parametric = tv_pred.s and np.any(tv_pred.s)
+            # contains_global = tv_pred.x and np.any(tv_pred.x)
+            contains_parametric = np.any(tv_pred.s)
+            contains_global = np.any(tv_pred.x)
             offs = 0
             t_ = tv_pred.t
             while t_ < tv_state.t - 0.5*self.dt:

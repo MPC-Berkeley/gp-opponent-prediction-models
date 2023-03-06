@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 import random
 
 import pynput
-from typing import List
+from typing import List, Tuple
 import numpy as np
 import scipy.interpolate
 
@@ -247,7 +247,7 @@ class ScenarioGenerator:
 
 @dataclass
 class Sample():
-    input: (VehicleState, VehicleState)
+    input: Tuple[VehicleState, VehicleState]
     output: VehicleState
     s: float
 

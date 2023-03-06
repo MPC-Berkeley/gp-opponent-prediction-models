@@ -17,6 +17,12 @@ rebuild = False
 all_tracks = True
 offset = 32 if not all_tracks else 0
 
+ego_L = 0.26
+ego_W = 0.173
+
+tar_L = 0.26
+tar_W = 0.173
+
 # Initial track conditions
 factor = 1.3  # v_long factor
 tarMin = VehicleState(t=0.0,
