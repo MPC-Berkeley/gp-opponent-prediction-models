@@ -822,9 +822,17 @@ class GPController(ABC):
         Format states to GP input
         """
         ego_state_gp = torch.tensor([ego_state.p.x_tran-tv_state.p.x_tran, ego_state.p.e_psi, ego_state.v.v_long])
-        tv_state_gp = torch.tensor(
-            [tv_state.p.s - ego_state.p.s, tv_state.p.x_tran, tv_state.p.e_psi, tv_state.v.v_long, tv_state.w.w_psi,
-             tv_state.lookahead.curvature[0], tv_state.lookahead.curvature[1], tv_state.lookahead.curvature[2]])
+        _tv_state_gp = [tv_state.p.s - ego_state.p.s, tv_state.p.x_tran, tv_state.p.e_psi, tv_state.v.v_long, tv_state.w.w_psi]
+        n_lookahead = 3
+        for i in range(n_lookahead):
+            _c = tv_state.lookahead.curvature[i]
+            if not isinstance(_c, list):
+                _c = [_c]
+            _tv_state_gp += _c
+        # tv_state_gp = torch.tensor(
+        #     [tv_state.p.s - ego_state.p.s, tv_state.p.x_tran, tv_state.p.e_psi, tv_state.v.v_long, tv_state.w.w_psi,
+        #      tv_state.lookahead.curvature[0], tv_state.lookahead.curvature[1], tv_state.lookahead.curvature[2]])
+        tv_state_gp = torch.tensor(_tv_state_gp)
         return torch.cat((ego_state_gp, tv_state_gp))
 
     def state_to_tensor_vec(self, ego_state, tv_state):
@@ -832,9 +840,12 @@ class GPController(ABC):
         Format states (in vector form) to GP input
         """
         ego_state_gp = torch.tensor([ego_state[1] - tv_state[1], ego_state[2], ego_state[3]])
-        tv_state_gp = torch.tensor(
-            [tv_state[0] - ego_state[0], tv_state[1], tv_state[2], tv_state[3], tv_state[4],
-             tv_state[5], tv_state[6], tv_state[7]])
+        # tv_state_gp = torch.tensor(
+        #     [tv_state[0] - ego_state[0], tv_state[1], tv_state[2], tv_state[3], tv_state[4],
+        #      tv_state[5], tv_state[6], tv_state[7]])
+        _tv_state_gp = copy.deepcopy(tv_state)
+        _tv_state_gp[0] -= ego_state[0]
+        tv_state_gp = torch.tensor(_tv_state_gp)
         return torch.cat((ego_state_gp, tv_state_gp))
 
     def set_evaluation_mode(self):
